@@ -68,6 +68,7 @@
     renderProfileControls();
     renderConditions();
     renderObs();
+    bindScan();
     bindPhotoSlots();
     bindVision();
     renderVisionState();
@@ -151,6 +152,29 @@
       b.classList.toggle("active", n === state.step);
       b.classList.toggle("done", n < state.step);
     });
+  }
+
+  function bindScan() {
+    window.addEventListener("cat:pick-breed", (e) => {
+      state.profile.breed_id = e.detail.id;
+      renderBreedGrid($("#breedSearch").value);
+      renderBreedDetail();
+      persist();
+      toast("已按识别结果填入品种，可再确认一下");
+      setTimeout(() => document.getElementById("breedPanel")?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+    });
+    window.addEventListener("cat:add-photo", (e) => {
+      const { role, dataUrl } = e.detail || {};
+      if (!role || !dataUrl) return;
+      if (state.photos.some((p) => p.role === role)) return;
+      state.photos.push({ role, dataUrl });
+      const slot = document.querySelector(`.photo-slot[data-role="${role}"]`);
+      if (slot) paintSlot(slot, role, dataUrl);
+      runQC();
+    });
+    if (window.CatScan && state.schema?.breeds) {
+      window.CatScan.setBreeds(state.schema.breeds);
+    }
   }
 
   function bindNav() {
@@ -411,7 +435,8 @@
       state.photos = state.photos.filter((p) => p.role !== role);
       slot.classList.remove("filled");
       slot.innerHTML = `<input type="file" accept="image/*" hidden><div class="slot-inner"><svg class="slot-icon"><use href="#i-cam"/></svg><b>${esc(role)}</b><span>${role === "正脸" ? "看眼睛、鼻子、耳朵" : role === "侧身" ? "看体况与呼吸起伏" : "看姿势、步态、被毛"}</span></div>`;
-      bindPhotoSlots();
+      bindScan();
+    bindPhotoSlots();
       runQC();
     });
   }

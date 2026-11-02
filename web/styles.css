@@ -671,3 +671,34 @@ details.fold .fold-body { padding: 0 20px 18px; }
   margin-top: 18px; font: inherit; font-size: 13px; cursor: pointer;
   background: var(--ink); color: #FBF7EE; border: 0; border-radius: 999px; padding: 9px 20px;
 }
+
+
+/* ---------------- 照片初筛 ---------------- */
+.scan-panel { border-color: #DCE2CF; background: linear-gradient(180deg, #FCFDF7, var(--card) 40%); }
+.scan-head { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.scan-copy { flex: 1 1 320px; }
+.scan-copy h2 { margin: 0 0 4px; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 9px; }
+.scan-copy .idx { color: var(--olive); border-color: var(--olive); }
+.scan-copy p { margin: 0; }
+.scan-result { margin-top: 18px; border-top: 1px solid var(--line-soft); padding-top: 16px; }
+.scan-swatches { display: flex; gap: 2px; height: 10px; border-radius: 6px; overflow: hidden; background: var(--line); }
+.swatch { display: block; height: 100%; min-width: 4px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.07); }
+.scan-summary { margin: 9px 0 14px; font-size: 12.5px; color: var(--ink-2); }
+.scan-cands { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 9px; }
+.scan-cand {
+  position: relative; text-align: left; font: inherit; cursor: pointer;
+  background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
+  padding: 12px 14px; transition: .16s;
+}
+.scan-cand:hover { border-color: var(--olive-2); background: #fff; transform: translateY(-1px); }
+.scan-cand.top { border-color: var(--olive-2); background: var(--olive-soft); }
+.scan-cand.picked { box-shadow: 0 0 0 2px var(--olive) inset; }
+.scan-cand b { display: block; font-size: 13.5px; padding-right: 34px; }
+.scan-cand em { display: block; font-style: normal; font-size: 11.5px; color: var(--ink-3); margin-top: 4px; line-height: 1.55; }
+.scan-score { position: absolute; top: 10px; right: 12px; font-family: var(--serif); font-size: 17px; color: var(--olive); }
+.scan-score small { font-family: var(--font); font-size: 9px; color: var(--ink-3); margin-left: 1px; }
+.scan-hint { margin: 12px 0 0; font-size: 11.5px; color: var(--ink-3); }
+.scan-error { margin: 0; font-size: 12.5px; color: var(--red); }
+.scan-loading { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--ink-3); }
+.scan-loading i { width: 15px; height: 15px; border: 2px solid var(--line); border-top-color: var(--olive); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }

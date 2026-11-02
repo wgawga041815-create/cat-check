@@ -51,6 +51,18 @@
       <p class="lede">同样是“不爱动”，布偶可能只是性格，折耳可能是关节在疼。品种、年龄、体况，会改变所有结论。</p>
     </div>
 
+    <div class="panel scan-panel">
+      <div class="scan-head">
+        <div class="scan-copy">
+          <h2><span class="idx">◎</span>先拍一张，自动填档案</h2>
+          <p class="hint">本地分析毛色与花纹，给出最可能的品种。照片不上传，年龄性别无法从照片判断。</p>
+        </div>
+        <button class="primary-btn" id="scanBtn">上传照片识别</button>
+        <input type="file" id="scanFile" accept="image/*" hidden>
+      </div>
+      <div id="scanResult" class="scan-result" hidden></div>
+    </div>
+
     <div class="panel" id="breedPanel">
       <div class="panel-head">
         <h2><span class="idx">A</span>品种</h2>
@@ -268,6 +280,7 @@
 <div class="toast" id="toast" hidden></div>
 
 <script src="mode.js"></script>
+<script src="scan.js"></script>
 <script src="static-boot.js"></script>
 <script src="app.js"></script>
 </body>
