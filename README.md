@@ -8,11 +8,16 @@
 
 如果观察到健康问题，报告会给出**可能方向、兽医可能做的检查、治疗路径与用药类别**，并明确列出**人用药红线**与**必须立刻就医的信号**。
 
+![品种选择](prev-home.png)
+
+![三花猫 · 未绝育 · 精神差多饮的报告](prev-report.png)
+
 ---
 
 ## 快速开始
 
 ```bash
+git clone https://github.com/wgawga041815-create/cat-check.git
 cd cat-check
 python3 server.py --open      # 会自动打开 http://127.0.0.1:8787
 ```
