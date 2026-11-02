@@ -50,13 +50,6 @@ https://wgawga041815-create.github.io/cat-check/
 - 首次打开需下载约 10MB 运行时（之后走缓存），页面会有进度条
 - 不提供历史报告与视觉模型代理（这两项需要服务端）
 
-**临时演示（隧道）**：`https://democratic-thumbnail-bug-farming.trycloudflare.com`
-由本机进程 + Cloudflare Quick Tunnel 提供，**只在进程运行期间有效**，重启后地址会变。演示模式已开启：
-
-- 报告不落盘、不提供历史报告接口（保护使用者隐私）
-- 同 IP 10 分钟最多 40 次分析请求
-- 品牌署名保留，可用 `BRAND_NAME` 改
-
 **永久部署（Docker）**
 
 ```bash
