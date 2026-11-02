@@ -7,7 +7,13 @@
   if (!window.__STATIC_MODE__) return;
 
   const PYODIDE_VERSION = "v0.29.5";
-  const PYODIDE_URL = `https://cdn.jsdelivr.net/pyodide/${PYODIDE_VERSION}/full/`;
+  // 依次尝试：jsDelivr → Fastly 镜像 → unpkg → npmmirror（国内可达）
+  const PYODIDE_BASES = [
+    `https://cdn.jsdelivr.net/pyodide/${PYODIDE_VERSION}/full/`,
+    `https://fastly.jsdelivr.net/pyodide/${PYODIDE_VERSION}/full/`,
+    "https://unpkg.com/pyodide@0.29.5/",
+    "https://registry.npmmirror.com/pyodide/0.29.5/files/",
+  ];
   const ENGINE_FILES = [
     "__init__.py", "breeds.py", "observations.py", "triage.py",
     "nutrition.py", "litter.py", "care.py", "report.py", "schema.py", "vision.py",
@@ -45,9 +51,17 @@
     pyReady = (async () => {
       msg("下载 Python 运行时…");
       bar(15);
-      await loadScript(PYODIDE_URL + "pyodide.js");
-      bar(40);
-      const py = await loadPyodide({ indexURL: PYODIDE_URL });
+      let py = null, lastErr = null;
+      for (const base of PYODIDE_BASES) {
+        try {
+          await loadScript(base + "pyodide.js");
+          py = await loadPyodide({ indexURL: base });
+          break;
+        } catch (e) {
+          lastErr = e;
+        }
+      }
+      if (!py) throw lastErr || new Error("Python 运行时加载失败");
       bar(65);
       msg("装载猫况引擎…");
       py.FS.mkdirTree("/engine");
