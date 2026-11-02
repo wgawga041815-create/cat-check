@@ -36,6 +36,30 @@ python3 server.py --open      # 会自动打开 http://127.0.0.1:8787
 
 ---
 
+## 在线演示与部署
+
+**临时演示（隧道）**：`https://democratic-thumbnail-bug-farming.trycloudflare.com`
+由本机进程 + Cloudflare Quick Tunnel 提供，**只在进程运行期间有效**，重启后地址会变。演示模式已开启：
+
+- 报告不落盘、不提供历史报告接口（保护使用者隐私）
+- 同 IP 10 分钟最多 40 次分析请求
+- 品牌署名保留，可用 `BRAND_NAME` 改
+
+**永久部署（Docker）**
+
+```bash
+docker build -t cat-check .
+docker run -p 8080:8080 -e PUBLIC_MODE=1 cat-check
+```
+
+**永久部署（Render，免费层）**
+
+仓库里已带 `render.yaml`：Render → New → Blueprint → 选这个仓库 → Apply。免费实例闲置会休眠，首次访问约 30 秒冷启动。
+
+**公网模式开关**：`PUBLIC_MODE=1` 时不保存报告、关闭历史接口并限流；本地自用不要设这个变量。
+
+---
+
 ## 田园猫为什么要按毛色拆
 
 「中华田园猫」不是单一品种，而是一组毛色表型。毛色决定了三件会改变结论的事：

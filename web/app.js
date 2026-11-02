@@ -73,7 +73,11 @@
     renderVisionState();
     bindNav();
     updateSteps();
-    renderHistoryBadge();
+    if (state.schema.public_mode) {
+      $("#historyBtn").hidden = true;
+    } else {
+      renderHistoryBadge();
+    }
 
     const params = new URLSearchParams(location.search);
     if (params.get("demo")) loadDemo(params.get("demo"));
@@ -926,6 +930,7 @@
   }
 
   async function renderHistoryBadge() {
+    if (state.schema?.public_mode) return;
     try {
       const data = await (await fetch("/api/reports")).json();
       if (data.items?.length) $("#historyBtn").textContent = `历史报告 · ${data.items.length}`;

@@ -38,8 +38,29 @@ from engine import care as care_engine          # noqa: E402
 from engine import vision                       # noqa: E402
 from engine.observations import OBS, GROUPS     # noqa: E402
 
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 BRAND = os.environ.get("BRAND_NAME", "云矿猫砂")
+# 公网模式：不落盘、不提供历史报告接口、限制请求频率
+PUBLIC = os.environ.get("PUBLIC_MODE", "").lower() in ("1", "true", "yes")
+
+# 简易限流：同一 IP 10 分钟内最多 40 次分析类请求
+RATE_WINDOW, RATE_MAX = 600, 40
+_RATE = {}
+_RATE_LOCK = threading.Lock()
+
+
+def rate_ok(ip):
+    now = time.time()
+    with _RATE_LOCK:
+        q = _RATE.setdefault(ip, [])
+        q[:] = [t for t in q if now - t < RATE_WINDOW]
+        if len(q) >= RATE_MAX:
+            return False
+        q.append(now)
+        if len(_RATE) > 5000:                     # 防内存膨胀
+            for k in [k for k, v in _RATE.items() if not v][:1000]:
+                _RATE.pop(k, None)
+        return True
 WEB = ROOT / "web"
 DATA = ROOT / "data"
 REPORTS = DATA / "reports"
@@ -112,7 +133,7 @@ def build_report(payload, save=True):
         "disclaimer": DISCLAIMER,
     }
 
-    if save and not payload.get("preview"):
+    if save and not payload.get("preview") and not PUBLIC:
         (REPORTS / f"{rid}.json").write_text(
             json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
         )
@@ -181,17 +202,22 @@ class Handler(BaseHTTPRequestHandler):
                         for t in litter_engine.TYPES
                     ],
                     "levels": triage_engine.LEVELS,
+                    "public_mode": PUBLIC,
                     "vision_configured": bool(vision.vlm_config()["api_key"]),
                     "vision_model": vision.vlm_config()["model"],
                     "disclaimer": DISCLAIMER,
                 })
             if p.startswith("/api/report/"):
+                if PUBLIC:
+                    return self._send(404, {"error": "公网演示模式不提供历史报告"})
                 rid = re.sub(r"[^0-9a-zA-Z\-]", "", p.rsplit("/", 1)[-1])
                 f = REPORTS / f"{rid}.json"
                 if not f.is_file():
                     return self._send(404, {"error": "报告不存在"})
                 return self._send(200, json.loads(f.read_text(encoding="utf-8")))
             if p == "/api/reports":
+                if PUBLIC:
+                    return self._send(200, {"items": [], "public": True})
                 items = []
                 for f in sorted(REPORTS.glob("*.json"), reverse=True)[:30]:
                     try:
@@ -212,6 +238,9 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         p = urlparse(self.path).path
+        ip = self.headers.get("CF-Connecting-IP") or self.client_address[0]
+        if p in ("/api/analyze", "/api/vision", "/api/photo-qc") and not rate_ok(ip):
+            return self._send(429, {"error": "请求太频繁了，休息几分钟再试。"})
         try:
             body = self._json_body()
             if p == "/api/analyze":
@@ -251,7 +280,7 @@ def main():
     print(f"  品种库     {len(breed_db.BREEDS)} 个品种")
     print(f"  观察项     {len(OBS)} 项")
     print(f"  视觉模型   {'已配置 · ' + vision.vlm_config()['model'] if vision.vlm_config()['api_key'] else '未配置（使用问卷 + 照片质检）'}")
-    print(f"  报告目录   {REPORTS}")
+    print(f"  报告目录   {'（公网模式：不落盘）' if PUBLIC else REPORTS}")
     print("  Ctrl+C 退出\n")
 
     if args.open:

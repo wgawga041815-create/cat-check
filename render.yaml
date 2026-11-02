@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: cat-check
+    runtime: docker
+    plan: free
+    region: singapore
+    healthCheckPath: /health
+    envVars:
+      - key: PUBLIC_MODE
+        value: "1"
+      - key: BRAND_NAME
+        value: "云矿猫砂"
