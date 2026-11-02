@@ -44,7 +44,7 @@ python3 server.py --open      # 会自动打开 http://127.0.0.1:8787
 
 https://wgawga041815-create.github.io/cat-check/
 
-这个版本把整套 `engine/*.py` 用 **Pyodide** 跑在浏览器里（WebAssembly），没有后端：
+由 `docs/` 目录直接托管（`python3 tools/build_pages.py` 生成），把整套 `engine/*.py` 用 **Pyodide** 跑在浏览器里（WebAssembly），没有后端：
 
 - 数据完全不出设备——照片、病史只在自己的浏览器内存里
 - 首次打开需下载约 10MB 运行时（之后走缓存），页面会有进度条
