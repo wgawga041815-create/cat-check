@@ -56,7 +56,7 @@
     booted = true;
     restore();
     try {
-      const res = await fetch("/api/schema");
+      const res = await fetch("api/schema");
       state.schema = await res.json();
     } catch (e) {
       document.body.innerHTML = `<div style="padding:40px;font-family:sans-serif">无法连接本地服务，请确认 <code>python3 server.py</code> 正在运行。<br><br>${esc(e.message)}</div>`;
@@ -73,6 +73,11 @@
     renderVisionState();
     bindNav();
     updateSteps();
+    if (state.schema.static_mode) {
+      $("#visionConfigBtn").hidden = true;
+      const note = $("#visionState");
+      if (note) note.textContent = "静态版运行在浏览器里（数据不出设备），照片只做本地画质质检；报告由品种 + 观察量表生成。";
+    }
     if (state.schema.public_mode) {
       $("#historyBtn").hidden = true;
     } else {
@@ -88,7 +93,7 @@
   async function loadReportById(id) {
     state.noPersist = true;
     try {
-      const rep = await (await fetch(`/api/report/${encodeURIComponent(id)}`)).json();
+      const rep = await (await fetch(`api/report/${encodeURIComponent(id)}`)).json();
       if (rep.error) { toast(rep.error); return; }
       state.report = rep;
       state.profile = { ...DEFAULT_PROFILE, ...rep.profile };
@@ -438,7 +443,7 @@
       panel.hidden = false;
       panel.innerHTML = `<div class="qc-card skeleton" style="height:120px"></div>`;
       try {
-        const res = await fetch("/api/photo-qc", {
+        const res = await fetch("api/photo-qc", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ photos: state.photos }),
         });
@@ -487,7 +492,7 @@
     const btn = $("#visionBtn");
     btn.disabled = true; btn.textContent = "识别中…";
     try {
-      const res = await fetch("/api/vision", {
+      const res = await fetch("api/vision", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ photos: state.photos, profile: state.profile, config: state.visionCfg }),
       });
@@ -530,7 +535,7 @@
       preview: isDemo,
     };
     try {
-      const res = await fetch("/api/analyze", {
+      const res = await fetch("api/analyze", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -901,7 +906,7 @@
     const list = $("#historyList");
     list.innerHTML = `<p class="empty-note">加载中…</p>`;
     try {
-      const data = await (await fetch("/api/reports")).json();
+      const data = await (await fetch("api/reports")).json();
       if (!data.items.length) { list.innerHTML = `<p class="empty-note">还没有报告。完成一次评估后会自动保存在本机。</p>`; return; }
       const toneColor = { red: "var(--red)", amber: "var(--amber)", olive: "var(--olive)", green: "var(--green)" };
       list.innerHTML = data.items.map((it) => `
@@ -910,7 +915,7 @@
           <p>${esc(it.at)}　${esc(it.headline)}</p>
         </button>`).join("");
       $$(".history-item", list).forEach((b) => b.addEventListener("click", async () => {
-        const rep = await (await fetch(`/api/report/${b.dataset.id}`)).json();
+        const rep = await (await fetch(`api/report/${b.dataset.id}`)).json();
         state.report = rep;
         state.profile = { ...DEFAULT_PROFILE, ...rep.profile };
         state.observations = Object.fromEntries((rep.triage.picked || []).map((p) => {
@@ -932,7 +937,7 @@
   async function renderHistoryBadge() {
     if (state.schema?.public_mode) return;
     try {
-      const data = await (await fetch("/api/reports")).json();
+      const data = await (await fetch("api/reports")).json();
       if (data.items?.length) $("#historyBtn").textContent = `历史报告 · ${data.items.length}`;
     } catch {}
   }

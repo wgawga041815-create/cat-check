@@ -40,6 +40,16 @@ python3 server.py --open      # 会自动打开 http://127.0.0.1:8787
 
 ## 在线演示与部署
 
+**GitHub Pages（永久、免费、无需服务器）**
+
+https://wgawga041815-create.github.io/cat-check/
+
+这个版本把整套 `engine/*.py` 用 **Pyodide** 跑在浏览器里（WebAssembly），没有后端：
+
+- 数据完全不出设备——照片、病史只在自己的浏览器内存里
+- 首次打开需下载约 10MB 运行时（之后走缓存），页面会有进度条
+- 不提供历史报告与视觉模型代理（这两项需要服务端）
+
 **临时演示（隧道）**：`https://democratic-thumbnail-bug-farming.trycloudflare.com`
 由本机进程 + Cloudflare Quick Tunnel 提供，**只在进程运行期间有效**，重启后地址会变。演示模式已开启：
 

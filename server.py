@@ -31,12 +31,10 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
 from engine import breeds as breed_db          # noqa: E402
-from engine import triage as triage_engine      # noqa: E402
-from engine import nutrition as nutrition_engine  # noqa: E402
-from engine import litter as litter_engine      # noqa: E402
-from engine import care as care_engine          # noqa: E402
 from engine import vision                       # noqa: E402
 from engine.observations import OBS, GROUPS     # noqa: E402
+from engine.report import build_report, DISCLAIMER   # noqa: E402
+from engine.schema import build_schema          # noqa: E402
 
 VERSION = "1.1.0"
 BRAND = os.environ.get("BRAND_NAME", "云矿猫砂")
@@ -78,63 +76,11 @@ MIME = {
     ".woff2": "font/woff2",
 }
 
-DISCLAIMER = (
-    "本工具是家庭观察辅助工具，不是兽医诊断。所有“可能方向”都只是提示，"
-    "确诊需要面诊、化验与影像学检查。任何用药（包括人用药、驱虫药、保健品）"
-    "都必须由执业兽医决定；出现急症信号请立即就医。"
-)
-
-
-# ------------------------------------------------------------------ 报告生成
-def build_report(payload, save=True):
-    profile = dict(payload.get("profile") or {})
-    observations = payload.get("observations") or {}
-    photos = payload.get("photos") or []
-    notes = (profile.get("notes") or "")[:1000]
-
-    profile["sex_label"] = {"male": "公猫", "female": "母猫"}.get(profile.get("sex"), "性别未填")
-    breed = breed_db.get(profile.get("breed_id", "")) or None
-    profile["_breed"] = breed
-    if breed:
-        profile["breed_zh"] = breed["zh"]
-
-    triage = triage_engine.evaluate(profile, observations)
-    nutrition = nutrition_engine.build(profile, triage)
-    litter = litter_engine.evaluate(profile, triage)
-    care = care_engine.build(profile, triage, nutrition, litter)
-
-    vision_ai = payload.get("vision") or None
-    qc = None
-    if photos:
-        try:
-            qc = vision.analyze(photos)
-        except Exception as e:  # noqa: BLE001
-            qc = {"photos": [], "overall": None, "available": False, "error": str(e)}
-
-    rid = time.strftime("%Y%m%d") + "-" + uuid.uuid4().hex[:6]
-    created = datetime.now().astimezone()
-
-    pub_profile = {k: v for k, v in profile.items() if not k.startswith("_")}
-    report = {
-        "id": rid,
-        "created_at": created.isoformat(),
-        "created_label": created.strftime("%Y-%m-%d %H:%M"),
-        "version": VERSION,
-        "brand": BRAND,
-        "profile": pub_profile,
-        "breed": breed_db.public(breed) if breed else None,
-        "notes": notes,
-        "photo_qc": qc,
-        "vision_ai": vision_ai,
-        "triage": triage,
-        "nutrition": nutrition,
-        "litter": litter,
-        "care": care,
-        "disclaimer": DISCLAIMER,
-    }
-
+def make_report(payload, save=True):
+    """组装报告，并按配置落盘。"""
+    report = build_report(payload, VERSION, BRAND)
     if save and not payload.get("preview") and not PUBLIC:
-        (REPORTS / f"{rid}.json").write_text(
+        (REPORTS / f"{report['id']}.json").write_text(
             json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
         )
     return report
@@ -189,24 +135,7 @@ class Handler(BaseHTTPRequestHandler):
             if p in ("/", "/index.html"):
                 return self._static("index.html")
             if p == "/api/schema":
-                return self._send(200, {
-                    "version": VERSION,
-                    "brand": BRAND,
-                    "breeds": [breed_db.public(b) for b in breed_db.BREEDS],
-                    "groups": GROUPS,
-                    "observations": OBS,
-                    "conditions": nutrition_engine.CONDITIONS,
-                    "litter_types": [
-                        {"id": t["id"], "zh": t["zh"], "short": t["short"],
-                         "grain": t["grain"], "pros": t["pros"], "cons": t["cons"], "note": t["note"]}
-                        for t in litter_engine.TYPES
-                    ],
-                    "levels": triage_engine.LEVELS,
-                    "public_mode": PUBLIC,
-                    "vision_configured": bool(vision.vlm_config()["api_key"]),
-                    "vision_model": vision.vlm_config()["model"],
-                    "disclaimer": DISCLAIMER,
-                })
+                return self._send(200, build_schema(VERSION, BRAND, PUBLIC, DISCLAIMER))
             if p.startswith("/api/report/"):
                 if PUBLIC:
                     return self._send(404, {"error": "公网演示模式不提供历史报告"})
@@ -244,7 +173,7 @@ class Handler(BaseHTTPRequestHandler):
         try:
             body = self._json_body()
             if p == "/api/analyze":
-                report = build_report(body)
+                report = make_report(body)
                 return self._send(200, report)
             if p == "/api/photo-qc":
                 return self._send(200, vision.analyze(body.get("photos") or []))
