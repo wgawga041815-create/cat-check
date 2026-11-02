@@ -14,6 +14,8 @@
 
 ---
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/wgawga041815-create/cat-check)
+
 ## 快速开始
 
 ```bash
@@ -52,9 +54,16 @@ docker build -t cat-check .
 docker run -p 8080:8080 -e PUBLIC_MODE=1 cat-check
 ```
 
-**永久部署（Render，免费层）**
+**永久部署（Render，免费层，推荐）**
 
-仓库里已带 `render.yaml`：Render → New → Blueprint → 选这个仓库 → Apply。免费实例闲置会休眠，首次访问约 30 秒冷启动。
+点上面的 Deploy to Render 按钮 → GitHub 登录 → Apply。
+仓库里的 `render.yaml` 已配好：Docker 构建、免费实例、`PUBLIC_MODE=1`、健康检查 `/health`。
+地址形如 `https://cat-check-xxxx.onrender.com`，永久不变；免费实例闲置 15 分钟休眠，首次访问约 30–60 秒冷启动。
+
+**永久部署（Hugging Face Spaces，免费、不休眠）**
+
+New Space → SDK 选 Docker → 关联或推送本仓库 → 把 README 顶部的部署徽章去掉、加上 `sdk: docker` 的 YAML front matter。
+免费 CPU 实例常驻不休眠，适合长期演示。
 
 **公网模式开关**：`PUBLIC_MODE=1` 时不保存报告、关闭历史接口并限流；本地自用不要设这个变量。
 
